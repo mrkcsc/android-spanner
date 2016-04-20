@@ -27,19 +27,19 @@ public class Spanner {
     }
 
     @SuppressWarnings("unused")
-    public Spanner addMatchStrategy(final OnMatchListener onMatchListener, final String start) {
-        return addMatchStrategy(onMatchListener, start, null);
+    public Spanner addReplacementStrategy(final OnMatchListener onMatchListener, final String start) {
+        return addReplacementStrategy(onMatchListener, start, null);
     }
 
-    public Spanner addMatchStrategy(final OnMatchListener onMatchListener, final String start, final String end) {
-        return addMatchStrategy(onMatchListener, start, end, true);
+    public Spanner addReplacementStrategy(final OnMatchListener onMatchListener, final String start, final String end) {
+        return addReplacementStrategy(onMatchListener, start, end, true);
     }
 
-    public Spanner addMatchStrategy(final OnMatchListener onMatchListener, final String start, final String end, boolean endRequired) {
-        return addMatchStrategy(onMatchListener, start, end, endRequired, false);
+    public Spanner addReplacementStrategy(final OnMatchListener onMatchListener, final String start, final String end, boolean endRequired) {
+        return addReplacementStrategy(onMatchListener, start, end, endRequired, false);
     }
 
-    public Spanner addMatchStrategy(final OnMatchListener onMatchListener, final String start, final String end, final boolean endRequired, final boolean endWithWhitespaceOrEOL) {
+    public Spanner addReplacementStrategy(final OnMatchListener onMatchListener, final String start, final String end, final boolean endRequired, final boolean endWithWhitespaceOrEOL) {
         matchStrategies.add(new MatchStrategy(onMatchListener, start, end, endRequired, endWithWhitespaceOrEOL));
 
         return this;

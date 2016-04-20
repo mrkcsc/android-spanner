@@ -19,13 +19,13 @@ public class MainActivity extends AppCompatActivity {
 
         final SpannableString a =
             new Spanner("Hey this is totally @{1121212} cool *miguel*!")
-                .addMatchStrategy(new Spanner.OnMatchListener() {
+                .addReplacementStrategy(new Spanner.OnMatchListener() {
                     @Override
                     public Spanner.Replacement call(String match) {
                         return new Spanner.Replacement(match, SpanHelpers.createBoldSpan());
                     }
                 }, "*", "*")
-                .addMatchStrategy(new Spanner.OnMatchListener() {
+                .addReplacementStrategy(new Spanner.OnMatchListener() {
                     @Override
                     public Spanner.Replacement call(String match) {
                         return new Spanner.Replacement("Sam",
