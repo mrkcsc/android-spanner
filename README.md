@@ -14,8 +14,6 @@ compile 'com.miguelgaeta.android-spanner:spanner:1.0.1'
 
 ### Usage
 
-TODO
-
 ```java
 
     final SpannableString spannableString =
