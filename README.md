@@ -12,12 +12,6 @@ compile 'com.miguelgaeta.android-spanner:spanner:1.0.1'
 
 ```
 
-```groovy
-
-compile 'com.miguelgaeta.android-spanner:spanner:1.0.1'
-
-```
-
 ### Usage
 
 TODO
