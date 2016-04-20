@@ -45,6 +45,53 @@ public class Spanner {
         return this;
     }
 
+    @SuppressWarnings("unused")
+    public Spanner addMarkdownStrategy() {
+        addReplacementStrategy(new OnMatchListener() {
+            @Override
+            public Replacement call(String match) {
+                return new Replacement(match, SpanHelpers.createBoldItalicSpan());
+            }
+        }, "***", "***");
+
+        addReplacementStrategy(new OnMatchListener() {
+            @Override
+            public Replacement call(String match) {
+                return new Replacement(match, SpanHelpers.createBoldSpan());
+            }
+        }, "**", "**");
+
+        addReplacementStrategy(new OnMatchListener() {
+            @Override
+            public Replacement call(String match) {
+                return new Replacement(match, SpanHelpers.createItalicSpan());
+            }
+        }, "*", "*");
+
+        addReplacementStrategy(new OnMatchListener() {
+            @Override
+            public Replacement call(String match) {
+                return new Replacement(match, SpanHelpers.createStrikethroughSpan());
+            }
+        }, "~~", "~~");
+
+        addReplacementStrategy(new OnMatchListener() {
+            @Override
+            public Replacement call(String match) {
+                return new Replacement(match, SpanHelpers.createUnderlineSpan());
+            }
+        }, "__", "__");
+
+        addReplacementStrategy(new OnMatchListener() {
+            @Override
+            public Replacement call(String match) {
+                return new Replacement(match, SpanHelpers.createItalicSpan());
+            }
+        }, "_", "_", true, true);
+
+        return this;
+    }
+
     public SpannableString toSpannableString() {
 
         for (final MatchStrategy matchStrategy : matchStrategies) {
