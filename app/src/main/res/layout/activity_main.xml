@@ -6,6 +6,7 @@
     tools:context="com.miguelgaeta.android_spanner.MainActivity">
 
     <TextView
+        android:id="@+id/spannable_string_holder"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Hello World!"/>
