@@ -47,19 +47,7 @@ public class Spanner {
 
     @SuppressWarnings("unused")
     public Spanner addMarkdownStrategy() {
-        addReplacementStrategy(new OnMatchListener() {
-            @Override
-            public Replacement call(String match) {
-                return new Replacement(match, SpanHelpers.createBoldItalicSpan());
-            }
-        }, "***", "***");
-
-        addReplacementStrategy(new OnMatchListener() {
-            @Override
-            public Replacement call(String match) {
-                return new Replacement(match, SpanHelpers.createBoldSpan());
-            }
-        }, "**", "**");
+        addMarkdownBoldStrategy();
 
         addReplacementStrategy(new OnMatchListener() {
             @Override
@@ -88,6 +76,24 @@ public class Spanner {
                 return new Replacement(match, SpanHelpers.createItalicSpan());
             }
         }, "_", "_", true, true);
+
+        return this;
+    }
+
+    public Spanner addMarkdownBoldStrategy() {
+        addReplacementStrategy(new OnMatchListener() {
+            @Override
+            public Replacement call(String match) {
+                return new Replacement(match, SpanHelpers.createBoldItalicSpan());
+            }
+        }, "***", "***");
+
+        addReplacementStrategy(new OnMatchListener() {
+            @Override
+            public Replacement call(String match) {
+                return new Replacement(match, SpanHelpers.createBoldSpan());
+            }
+        }, "**", "**");
 
         return this;
     }
