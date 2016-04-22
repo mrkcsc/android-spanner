@@ -1,5 +1,6 @@
 package com.miguelgaeta.spanner;
 
+import android.content.Context;
 import android.text.SpannableString;
 import android.text.Spanned;
 import android.text.style.CharacterStyle;
@@ -22,8 +23,20 @@ public class Spanner {
     private final List<MatchStrategy> matchStrategies = new ArrayList<>();
     private final List<Replacement> replacements = new ArrayList<>();
 
+    public Spanner(final Context context, final int stringResId) {
+        this.sourceString = context.getString(stringResId);
+    }
+
+    public Spanner(final Context context, final int stringResId, Object... args) {
+        this.sourceString = String.format(context.getString(stringResId), args);
+    }
+
     public Spanner(final String sourceString) {
         this.sourceString = sourceString;
+    }
+
+   public Spanner(final String sourceString, Object... args) {
+        this.sourceString = String.format(sourceString, args);
     }
 
     @SuppressWarnings("unused")
