@@ -1,3 +1,7 @@
+## 1.0.3 - 2016-04-21
+
+- Add constructor overloads.
+
 ## 1.0.2 - 2016-04-20
 
 - Bold strategy helper.
