@@ -58,55 +58,38 @@ public class Spanner {
         return this;
     }
 
+    public Spanner addReplacementStrategy(final String start, final CharacterStyle... styles) {
+        return addReplacementStrategy(start, null, styles);
+    }
+
+    public Spanner addReplacementStrategy(final String start, final String end, final CharacterStyle... styles) {
+        return addReplacementStrategy(start, end, false, styles);
+    }
+
+    public Spanner addReplacementStrategy(final String start, final String end, boolean endRequired, final CharacterStyle... styles) {
+        return addReplacementStrategy(new OnMatchListener() {
+            @Override
+            public Replacement call(String match) {
+                return new Replacement(match, styles);
+            }
+        }, start, end, endRequired);
+    }
+
     @SuppressWarnings("unused")
     public Spanner addMarkdownStrategy() {
-        addMarkdownBoldStrategy();
-
-        addReplacementStrategy(new OnMatchListener() {
-            @Override
-            public Replacement call(String match) {
-                return new Replacement(match, SpanHelpers.createItalicSpan());
-            }
-        }, "*", "*");
-
-        addReplacementStrategy(new OnMatchListener() {
-            @Override
-            public Replacement call(String match) {
-                return new Replacement(match, SpanHelpers.createStrikethroughSpan());
-            }
-        }, "~~", "~~");
-
-        addReplacementStrategy(new OnMatchListener() {
-            @Override
-            public Replacement call(String match) {
-                return new Replacement(match, SpanHelpers.createUnderlineSpan());
-            }
-        }, "__", "__");
-
-        addReplacementStrategy(new OnMatchListener() {
-            @Override
-            public Replacement call(String match) {
-                return new Replacement(match, SpanHelpers.createItalicSpan());
-            }
-        }, "_", "_", true, true);
+        addReplacementStrategy("***", "***", SpanHelpers.createBoldItalicSpan());
+        addReplacementStrategy("**", "***", SpanHelpers.createBoldSpan());
+        addReplacementStrategy("*", "*", SpanHelpers.createItalicSpan());
+        addReplacementStrategy("~~", "~~", SpanHelpers.createStrikethroughSpan());
+        addReplacementStrategy("__", "__", SpanHelpers.createUnderlineSpan());
+        addReplacementStrategy("_", "_", SpanHelpers.createItalicSpan());
 
         return this;
     }
 
     public Spanner addMarkdownBoldStrategy() {
-        addReplacementStrategy(new OnMatchListener() {
-            @Override
-            public Replacement call(String match) {
-                return new Replacement(match, SpanHelpers.createBoldItalicSpan());
-            }
-        }, "***", "***");
-
-        addReplacementStrategy(new OnMatchListener() {
-            @Override
-            public Replacement call(String match) {
-                return new Replacement(match, SpanHelpers.createBoldSpan());
-            }
-        }, "**", "**");
+        addReplacementStrategy("***", "***", SpanHelpers.createBoldItalicSpan());
+        addReplacementStrategy("**", "***", SpanHelpers.createBoldSpan());
 
         return this;
     }
