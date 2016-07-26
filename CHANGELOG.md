@@ -1,3 +1,7 @@
+## 1.0.4 - 2016-07-26
+
+- Add strategy overloads.
+
 ## 1.0.3 - 2016-04-21
 
 - Add constructor overloads.
