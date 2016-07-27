@@ -89,7 +89,7 @@ public class Spanner {
 
     public Spanner addMarkdownBoldStrategy() {
         addReplacementStrategy("***", "***", SpanHelpers.createBoldItalicSpan());
-        addReplacementStrategy("**", "***", SpanHelpers.createBoldSpan());
+        addReplacementStrategy("**", "**", SpanHelpers.createBoldSpan());
 
         return this;
     }
