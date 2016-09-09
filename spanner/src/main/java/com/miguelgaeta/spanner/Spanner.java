@@ -68,9 +68,20 @@ public class Spanner {
 
     public Spanner addReplacementStrategy(final String start, final String end, boolean endRequired, final CharacterStyle... styles) {
         return addReplacementStrategy(new OnMatchListener() {
+
+            /**
+             * Note that an instance of {@link CharacterStyle} must only be used on a single
+             * span section so each time we find a match we must create a copy of
+             * the provided styles to apply to the match.
+             */
             @Override
             public Replacement call(String match) {
-                return new Replacement(match, styles);
+                final CharacterStyle[] wrappedStyles = new CharacterStyle[styles.length];
+                for (int i = 0; i < styles.length; i++) {
+                    wrappedStyles[i] = CharacterStyle.wrap(styles[i]);
+                }
+
+                return new Replacement(match, wrappedStyles);
             }
         }, start, end, endRequired);
     }
