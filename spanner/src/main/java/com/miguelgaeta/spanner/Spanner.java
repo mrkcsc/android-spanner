@@ -63,7 +63,7 @@ public class Spanner {
     }
 
     public Spanner addReplacementStrategy(final String start, final String end, final CharacterStyle... styles) {
-        return addReplacementStrategy(start, end, false, styles);
+        return addReplacementStrategy(start, end, true, styles);
     }
 
     public Spanner addReplacementStrategy(final String start, final String end, boolean endRequired, final CharacterStyle... styles) {
