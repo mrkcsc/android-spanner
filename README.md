@@ -8,7 +8,7 @@ A powerful spannable string builder that supports arbitrary substitutions.
 
 ```groovy
 
-compile 'com.miguelgaeta.android-spanner:spanner:1.0.5'
+compile 'com.miguelgaeta.android-spanner:spanner:1.0.6'
 
 ```
 
