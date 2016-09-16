@@ -17,6 +17,7 @@ import java.util.List;
  *
  * A powerful spannable string builder that supports arbitrary substitutions.
  */
+@SuppressWarnings({"WeakerAccess", "UnusedDeclaration"})
 public class Spanner {
 
     private String sourceString = "";
@@ -39,7 +40,6 @@ public class Spanner {
         this.sourceString = String.format(sourceString, args);
     }
 
-    @SuppressWarnings("unused")
     public Spanner addReplacementStrategy(final OnMatchListener onMatchListener, final String start) {
         return addReplacementStrategy(onMatchListener, start, null);
     }
