@@ -1,6 +1,7 @@
 package com.miguelgaeta.spanner;
 
 import android.content.Context;
+import android.text.Spannable;
 import android.text.SpannableString;
 import android.text.Spanned;
 import android.text.style.CharacterStyle;
@@ -11,6 +12,8 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Created by Miguel Gaeta on 4/20/16.
@@ -20,9 +23,8 @@ import java.util.List;
 @SuppressWarnings({"WeakerAccess", "UnusedDeclaration"})
 public class Spanner {
 
-    private String sourceString = "";
+    private final String sourceString;
     private final List<MatchStrategy> matchStrategies = new ArrayList<>();
-    private final List<Replacement> replacements = new ArrayList<>();
 
     public Spanner(final Context context, final int stringResId) {
         this.sourceString = context.getString(stringResId);
@@ -40,166 +42,68 @@ public class Spanner {
         this.sourceString = String.format(sourceString, args);
     }
 
-    public Spanner addReplacementStrategy(final OnMatchListener onMatchListener, final String start) {
-        return addReplacementStrategy(onMatchListener, start, null);
-    }
-
-    public Spanner addReplacementStrategy(final OnMatchListener onMatchListener, final String start, final String end) {
-        return addReplacementStrategy(onMatchListener, start, end, true);
-    }
-
-    public Spanner addReplacementStrategy(final OnMatchListener onMatchListener, final String start, final String end, boolean endRequired) {
-        return addReplacementStrategy(onMatchListener, start, end, endRequired, false);
-    }
-
-    public Spanner addReplacementStrategy(final OnMatchListener onMatchListener, final String start, final String end, final boolean endRequired, final boolean endWithWhitespaceOrEOL) {
-        matchStrategies.add(new MatchStrategy(onMatchListener, start, end, endRequired, endWithWhitespaceOrEOL));
+    public Spanner replace(final MatchStrategy... matchStrategies) {
+        Collections.addAll(this.matchStrategies, matchStrategies);
 
         return this;
     }
 
-    public Spanner addReplacementStrategy(final String start, final CharacterStyle... styles) {
-        return addReplacementStrategy(start, null, styles);
-    }
-
-    public Spanner addReplacementStrategy(final String start, final String end, final CharacterStyle... styles) {
-        return addReplacementStrategy(start, end, true, styles);
-    }
-
-    public Spanner addReplacementStrategy(final String start, final String end, boolean endRequired, final CharacterStyle... styles) {
-        return addReplacementStrategy(new OnMatchListener() {
-
-            /**
-             * Note that an instance of {@link CharacterStyle} must only be used on a single
-             * span section so each time we find a match we must create a copy of
-             * the provided styles to apply to the match.
-             */
-            @Override
-            public Replacement call(String match) {
-                final CharacterStyle[] wrappedStyles = new CharacterStyle[styles.length];
-                for (int i = 0; i < styles.length; i++) {
-                    wrappedStyles[i] = CharacterStyle.wrap(styles[i]);
-                }
-
-                return new Replacement(match, wrappedStyles);
-            }
-        }, start, end, endRequired);
-    }
-
-    @SuppressWarnings("unused")
-    public Spanner addMarkdownStrategy() {
-        addReplacementStrategy("***", "***", SpanHelpers.createBoldItalicSpan());
-        addReplacementStrategy("**", "***", SpanHelpers.createBoldSpan());
-        addReplacementStrategy("*", "*", SpanHelpers.createItalicSpan());
-        addReplacementStrategy("~~", "~~", SpanHelpers.createStrikethroughSpan());
-        addReplacementStrategy("__", "__", SpanHelpers.createUnderlineSpan());
-        addReplacementStrategy("_", "_", SpanHelpers.createItalicSpan());
-
-        return this;
-    }
-
-    public Spanner addMarkdownBoldStrategy() {
-        addReplacementStrategy("***", "***", SpanHelpers.createBoldItalicSpan());
-        addReplacementStrategy("**", "**", SpanHelpers.createBoldSpan());
-
-        return this;
-    }
-
-    public SpannableString toSpannableString() {
+    public Spannable toSpannable() {
+        final List<Replacement> replacements = new ArrayList<>();
+        final StringBuilder outputString = new StringBuilder(sourceString);
 
         for (final MatchStrategy matchStrategy : matchStrategies) {
-            int startIndex = 0;
 
-            do {
-                startIndex = sourceString.indexOf(matchStrategy.start, startIndex);
+            final Matcher matcher = matchStrategy.pattern.matcher(outputString);
 
-                if (startIndex != -1) {
-                    final int startIndexOffset = matchStrategy.start.length();
+            while (matcher.find()) {
+                final int startIndex = matcher.start();
+                final int endIndex = matcher.end();
 
-                    if (matchStrategy.end == null) {
+                final Replacement replacement = matchStrategy.onMatchListener.call(matcher);
+                final String replacementString = replacement.replacementString;
 
-                        int endIndex = startIndex + startIndexOffset;
-                        final Replacement replacement = matchStrategy.onMatchListener.call(matchStrategy.start);
+                outputString.replace(startIndex, endIndex, replacementString);
 
-                        startIndex = computeStartIndexWithSpans(startIndex, startIndexOffset, endIndex, replacement);
+                final int offset = endIndex - startIndex - replacementString.length();
 
-                    } else {
+                replacement.start = startIndex;
+                replacement.end = endIndex - offset;
 
-                        int endIndex = sourceString.indexOf(matchStrategy.end, startIndex + startIndexOffset);
-                        final boolean isEOLMatch = endIndex == -1 && !matchStrategy.endRequired;
+                replacements.add(replacement);
 
-                        if (isEOLMatch) {
-                            endIndex = sourceString.length();
-                        }
-
-                        if (matchStrategy.endWithWhitespaceOrEOL && endIndex != -1) {
-
-                            if (endIndex != (sourceString.length() - 1) && !Character.isWhitespace(sourceString.charAt(endIndex + 1))) {
-                                endIndex = -1;
-                            }
-                        }
-
-                        if (endIndex != -1) {
-
-                            final String match = sourceString.substring(startIndex + startIndexOffset, endIndex);
-                            final Replacement replacement = matchStrategy.onMatchListener.call(match);
-
-                            if (!isEOLMatch) {
-                                endIndex += matchStrategy.end.length();
-                            }
-
-                            startIndex = computeStartIndexWithSpans(startIndex, startIndexOffset, endIndex, replacement);
-
-                        } else {
-                            startIndex = -1;
-                        }
-                    }
+                if (offset == 0) {
+                    continue;
                 }
 
-            } while (startIndex != -1);
-        }
+                for (final Replacement existingReplacement : replacements) {
 
-        return buildSpannableString(sourceString, replacements);
-    }
-
-    private int computeStartIndexWithSpans(final int startIndex, final int startIndexOffset, final int endIndex, final Replacement replacement) {
-
-        // Replace match with user provided replacement.
-        sourceString = new StringBuilder(sourceString).replace(startIndex, endIndex, replacement.replacementString).toString();
-
-        // Update the new end index location.
-        final int endIndexUpdated = startIndex + replacement.replacementString.length();
-
-        final int offset = (endIndex - startIndex) - (endIndexUpdated - startIndex);
-
-        if (offset != 0) {
-
-            for (final Replacement existingReplacement : replacements) {
-
-                if (existingReplacement.start > startIndex) {
-                    existingReplacement.start -= startIndexOffset;
-
-                    if (existingReplacement.start > endIndexUpdated) {
-                        existingReplacement.start -= offset - startIndexOffset;
+                    if (existingReplacement.start > endIndex) {
+                        // ** _hello_ **
                     }
-                }
 
-                if (existingReplacement.end > startIndex) {
-                    existingReplacement.end -= startIndexOffset;
+                    /*
+                    if (existingReplacement.start > startIndex) {
+                        existingReplacement.start -= startIndexOffset;
 
-                    if (existingReplacement.end > endIndexUpdated) {
-                        existingReplacement.end -= offset - startIndexOffset;
+                        if (existingReplacement.start > endIndexUpdated) {
+                            existingReplacement.start -= offset - startIndexOffset;
+                        }
                     }
+
+                    if (existingReplacement.end > startIndex) {
+                        existingReplacement.end -= startIndexOffset;
+
+                        if (existingReplacement.end > endIndexUpdated) {
+                            existingReplacement.end -= offset - startIndexOffset;
+                        }
+                    }
+                    */
                 }
             }
         }
 
-        replacement.start = startIndex;
-        replacement.end = endIndexUpdated;
-
-        replacements.add(replacement);
-
-        return endIndexUpdated;
+        return buildSpannableString(outputString.toString(), replacements);
     }
 
     /**
@@ -214,12 +118,12 @@ public class Spanner {
      *
      * @return Source string with spans applied.
      */
-    private static SpannableString buildSpannableString(final String sourceString, final Collection<Replacement> replacements) {
-        final SpannableString spannableString = new SpannableString(sourceString);
+    private static Spannable buildSpannableString(final String sourceString, final Collection<Replacement> replacements) {
+        final Spannable spannableString = new SpannableString(sourceString);
 
         try {
             for (final Replacement replacement : replacements) {
-                for (final CharacterStyle characterStyle : replacement.replacementSpans) {
+                for (final Object characterStyle : replacement.replacementSpans) {
                     spannableString.setSpan(characterStyle, replacement.start, replacement.end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
                 }
             }
@@ -230,51 +134,52 @@ public class Spanner {
         return spannableString;
     }
 
-    @SuppressWarnings("unused")
+    /**
+     * TODO
+     */
     public interface OnMatchListener {
 
-        Replacement call(final String match);
+        Replacement call(final Matcher matcher);
     }
 
     /**
      * Represents a desired match strategy with a callback
      * to allow the user to return a replacement string
      * along with desired spans to apply to it.
-     *
-     * TODO: This could be made simpler by being represented as a regex.
      */
-    private static class MatchStrategy {
+    public static class MatchStrategy {
 
-        final OnMatchListener onMatchListener;
-        final String start;
-        final String end;
-        final boolean endRequired;
-        final boolean endWithWhitespaceOrEOL;
+        protected final Pattern pattern;
+        protected OnMatchListener onMatchListener;
 
-        private MatchStrategy(final OnMatchListener onMatchListener, final String start, final String end, final boolean endRequired, final boolean endWithWhitespaceOrEOL) {
+        public MatchStrategy(final String regex, final OnMatchListener onMatchListener) {
+            this.pattern = Pattern.compile(regex);
             this.onMatchListener = onMatchListener;
-            this.start = start;
-            this.end = end;
-            this.endRequired = endRequired;
-            this.endWithWhitespaceOrEOL = endWithWhitespaceOrEOL;
+        }
+
+        public MatchStrategy(final Pattern pattern, final OnMatchListener onMatchListener) {
+            this.pattern = pattern;
+            this.onMatchListener = onMatchListener;
         }
     }
 
-    @SuppressWarnings("unused")
+    /**
+     * TODO
+     */
     public static class Replacement {
 
         final String replacementString;
-        final List<CharacterStyle> replacementSpans;
+        final List<Object> replacementSpans;
 
         int start;
         int end;
 
-        public Replacement(final String replacementString, final List<CharacterStyle> replacementSpans) {
+        public Replacement(final String replacementString, final List<Object> replacementSpans) {
             this.replacementString = replacementString;
             this.replacementSpans = replacementSpans;
         }
 
-        public Replacement(final String replacementString, CharacterStyle... spanStyles) {
+        public Replacement(final String replacementString, Object... spanStyles) {
             this(replacementString, Arrays.asList(spanStyles));
         }
 

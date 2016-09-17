@@ -9,5 +9,6 @@
         android:id="@+id/spannable_string_holder"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_margin="8dp"
         android:text="Hello World!"/>
 </RelativeLayout>
