@@ -25,7 +25,7 @@ import android.view.View;
  *
  * Collection of convenience span initializer.
  */
-@SuppressWarnings("unused")
+@SuppressWarnings({"WeakerAccess", "UnusedDeclaration"})
 public class SpanHelpers {
 
     public static CharacterStyle createMonospaceSpan() {
