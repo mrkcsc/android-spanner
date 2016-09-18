@@ -8,7 +8,7 @@ import android.text.style.TypefaceSpan;
 @SuppressWarnings({"WeakerAccess", "UnusedDeclaration", "DefaultFileTemplate"})
 public class MonospaceSpan extends TypefaceSpan {
 
-    public MonospaceSpan(String family) {
+    public MonospaceSpan() {
         super("monospace");
     }
 }

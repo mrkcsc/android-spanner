@@ -9,7 +9,7 @@ import android.text.style.StyleSpan;
 @SuppressWarnings({"WeakerAccess", "UnusedDeclaration", "DefaultFileTemplate"})
 public class ItalicSpan extends StyleSpan {
 
-    public ItalicSpan(int style) {
+    public ItalicSpan() {
         super(Typeface.ITALIC);
     }
 }

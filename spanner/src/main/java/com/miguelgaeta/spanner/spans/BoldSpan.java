@@ -9,7 +9,7 @@ import android.text.style.StyleSpan;
 @SuppressWarnings({"WeakerAccess", "UnusedDeclaration", "DefaultFileTemplate"})
 public class BoldSpan extends StyleSpan {
 
-    public BoldSpan(int style) {
+    public BoldSpan() {
         super(Typeface.BOLD);
     }
 }
