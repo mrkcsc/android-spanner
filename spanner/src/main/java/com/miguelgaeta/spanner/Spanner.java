@@ -56,19 +56,23 @@ public class Spanner {
 
             final Matcher matcher = matchStrategy.pattern.matcher(outputString);
 
+            int offset = 0;
+
             while (matcher.find()) {
-                final int startIndex = matcher.start();
-                final int endIndex = matcher.end();
+                final int startIndex = matcher.start() - offset;
+                final int endIndex = matcher.end() - offset;
 
                 final Replacement replacement = matchStrategy.onMatchListener.call(matcher);
                 final String replacementString = replacement.replacementString;
 
                 outputString.replace(startIndex, endIndex, replacementString);
 
-                final int offset = endIndex - startIndex - replacementString.length();
+                final int matchOffset = endIndex - startIndex - replacementString.length();
 
                 replacement.start = startIndex;
-                replacement.end = endIndex - offset;
+                replacement.end = endIndex - matchOffset;
+
+                offset += matchOffset;
 
                 replacements.add(replacement);
 
@@ -79,7 +83,8 @@ public class Spanner {
                 for (final Replacement existingReplacement : replacements) {
 
                     if (existingReplacement.start > endIndex) {
-                        // ** _hello_ **
+                        existingReplacement.start -= offset;
+                        existingReplacement.end -= offset;
                     }
 
                     /*
