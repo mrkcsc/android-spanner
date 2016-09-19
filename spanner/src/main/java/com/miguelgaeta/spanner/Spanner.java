@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -50,50 +51,79 @@ public class Spanner {
 
     public Spannable toSpannable() {
         final List<Replacement> replacements = new ArrayList<>();
-        final StringBuilder outputString = new StringBuilder(sourceString);
+        final StringBuilder spannable = new StringBuilder(sourceString);
 
         for (final MatchStrategy matchStrategy : matchStrategies) {
 
-            final Matcher matcher = matchStrategy.pattern.matcher(outputString);
+            final Matcher matcher = matchStrategy.pattern.matcher(spannable);
 
-            int offset = 0;
+            int totalOffset = 0;
 
             while (matcher.find()) {
-                final int startIndex = matcher.start() - offset;
-                final int endIndex = matcher.end() - offset;
+
+                final int startIndex = matcher.start() - totalOffset;
+                final int endIndex = matcher.end() - totalOffset;
 
                 final Replacement replacement = matchStrategy.onMatchListener.call(matcher);
                 final String replacementString = replacement.replacementString;
 
-                outputString.replace(startIndex, endIndex, replacementString);
+                spannable.replace(startIndex, endIndex, replacementString);
 
-                final int matchOffset = endIndex - startIndex - replacementString.length();
+                final int offset = endIndex - startIndex - replacementString.length();
 
                 replacement.start = startIndex;
-                replacement.end = endIndex - matchOffset;
+                replacement.end = endIndex - offset;
 
-                offset += matchOffset;
+                totalOffset += offset;
 
-                replacements.add(replacement);
+                updateExistingReplacements(spannable, replacements, startIndex, endIndex, offset);
 
-                if (offset == 0) {
-                    continue;
-                }
-
-                for (final Replacement existingReplacement : replacements) {
-
-                    if (existingReplacement.start > endIndex) {
-                        existingReplacement.start -= matchOffset;
-                        existingReplacement.end -= matchOffset;
-
-                    } else if (existingReplacement.start > startIndex) {
-
-                    }
+                if (replacement.replacementString.length() > 0) {
+                    replacements.add(replacement);
                 }
             }
         }
 
-        return buildSpannableString(outputString.toString(), replacements);
+        return buildSpannableString(spannable.toString(), replacements);
+    }
+
+    /**
+     * Given the current spannable string, replacements and a match
+     * start and end index (before replacement applied) with
+     * the replacement offset, attempt to shift
+     * any existing replacements that may come after it
+     * and re-establish the indices of replacements within it.
+     */
+    private static void updateExistingReplacements(final StringBuilder spannable, final List<Replacement> replacements, final int startIndex, final int endIndex, final int offset) {
+        if (offset == 0) {
+            return;
+        }
+
+        final Iterator<Replacement> existingReplacementIterator = replacements.iterator();
+
+        while (existingReplacementIterator.hasNext()) {
+            final Replacement existingReplacement = existingReplacementIterator.next();
+
+            if (existingReplacement.start > endIndex) {
+                existingReplacement.start -= offset;
+                existingReplacement.end -= offset;
+
+            } else if (existingReplacement.start >= startIndex) {
+
+                // Pull down the replacement string.
+                final String replacementString = spannable.substring(startIndex, endIndex - offset);
+
+                // Look for the existing replacement string within it to shift it's indices.
+                final int shiftedStartIndex = replacementString.indexOf(existingReplacement.replacementString);
+
+                if (shiftedStartIndex == -1) {
+                    existingReplacementIterator.remove();
+                } else {
+                    existingReplacement.start = shiftedStartIndex;
+                    existingReplacement.end = shiftedStartIndex + existingReplacement.replacementString.length();
+                }
+            }
+        }
     }
 
     /**
