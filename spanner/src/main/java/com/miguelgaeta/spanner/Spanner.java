@@ -119,8 +119,8 @@ public class Spanner {
                 if (shiftedStartIndex == -1) {
                     existingReplacementIterator.remove();
                 } else {
-                    existingReplacement.start = shiftedStartIndex;
-                    existingReplacement.end = shiftedStartIndex + existingReplacement.replacementString.length();
+                    existingReplacement.start = startIndex + shiftedStartIndex;
+                    existingReplacement.end = startIndex + shiftedStartIndex + existingReplacement.replacementString.length();
                 }
             }
         }
