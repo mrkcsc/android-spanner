@@ -18,23 +18,26 @@ import java.util.regex.Pattern;
 @SuppressWarnings({"DefaultFileTemplate", "WeakerAccess"})
 public class SpannerMarkdown {
 
+    private static final String REGEX_LINK = "\\[([\\s\\S]+?)\\]\\(([\\s\\S]+?)\\)";
     private static final String REGEX_CODE_BLOCK = "((```)([\\s\\S]+?)(```))";
     private static final String REGEX_CODE_INLINE = "((`)([\\s\\S]+?)(`))";
     private static final String REGEX_CODE = REGEX_CODE_BLOCK + "|" + REGEX_CODE_INLINE;
     private static final String REGEX_UNDERLINE = "(__)([\\s\\S]+?)(__)";
     private static final String REGEX_BOLD_ITALIC = "(\\*\\*\\*)([\\s\\S]+?)(\\*\\*\\*)";
     private static final String REGEX_BOLD = "(\\*\\*)([\\s\\S]+?)(\\*\\*)";
-    private static final String REGEX_ITALIC = "((\\*)([\\s\\S]+?)(\\*))|((_)([\\s\\S]+?)(_)($|\\s))";
-    private static final String REGEX_STRIKE_THROUGH = "(~~)([\\s\\S]+?)(~~)";
+    private static final String REGEX_ITALIC = "((\\*)([\\s\\S]+?)(\\*))|((_)([\\s\\S]+?)(_)(\\b))";
+    private static final String REGEX_STRIKE_THROUGH = "([^\\\\]|^)~~([\\s\\S]+?)([^\\\\])~~";
 
-    // TODO: At least one middle char.
+    public static final int LINK_GROUP_TITLE = 1;
+    public static final int LINK_GROUP_URL = 2;
 
-    private static final Pattern PATTERN_CODE_BLOCK = Pattern.compile(REGEX_CODE_BLOCK);
-    private static final Pattern PATTERN_UNDERLINE = Pattern.compile(REGEX_UNDERLINE);
-    private static final Pattern PATTERN_BOLD_ITALIC = Pattern.compile(REGEX_BOLD_ITALIC);
-    private static final Pattern PATTERN_BOLD = Pattern.compile(REGEX_BOLD);
-    private static final Pattern PATTERN_ITALIC = Pattern.compile(REGEX_ITALIC);
-    private static final Pattern PATTERN_STRIKE_THROUGH = Pattern.compile(REGEX_STRIKE_THROUGH);
+    public static final Pattern PATTERN_LINK = Pattern.compile(REGEX_LINK);
+    public static final Pattern PATTERN_CODE_BLOCK = Pattern.compile(REGEX_CODE_BLOCK);
+    public static final Pattern PATTERN_UNDERLINE = Pattern.compile(REGEX_UNDERLINE);
+    public static final Pattern PATTERN_BOLD_ITALIC = Pattern.compile(REGEX_BOLD_ITALIC);
+    public static final Pattern PATTERN_BOLD = Pattern.compile(REGEX_BOLD);
+    public static final Pattern PATTERN_ITALIC = Pattern.compile(REGEX_ITALIC);
+    public static final Pattern PATTERN_STRIKE_THROUGH = Pattern.compile(REGEX_STRIKE_THROUGH);
 
     private static final Spanner.MatchStrategy STRATEGY_UNDERLINE = new Spanner.MatchStrategy(PATTERN_UNDERLINE, new Spanner.OnMatchListener() {
         @Override
@@ -74,12 +77,11 @@ public class SpannerMarkdown {
     private static final Spanner.MatchStrategy STRATEGY_STRIKE_THROUGH = new Spanner.MatchStrategy(PATTERN_STRIKE_THROUGH, new Spanner.OnMatchListener() {
         @Override
         public Spanner.Replacement call(Matcher matcher) {
-            return new Spanner.Replacement(matcher.group(2), new StrikethroughSpan());
+            return new Spanner.Replacement(matcher.group(1) + matcher.group(2) + matcher.group(3), new StrikethroughSpan());
         }
     });
 
     public static Spanner.MatchStrategy forCodeInline() {
-
         return null;
     }
 
@@ -96,7 +98,7 @@ public class SpannerMarkdown {
                     replacement = matcher.group(7);
                 }
 
-                return new Spanner.Replacement(replacement, onMatchListener.getStyles(block));
+                return new Spanner.Replacement(replacement, onMatchListener.getSpans(block));
             }
         });
     }
@@ -121,17 +123,11 @@ public class SpannerMarkdown {
         return STRATEGY_STRIKE_THROUGH;
     }
 
-    public static Spanner.MatchStrategy forLinks() {
-        // TODO: Links
-
-        return null;
-    }
-
     /**
      * TODO
      */
     public interface OnCodeBlockMatchListener {
 
-        Collection<CharacterStyle> getStyles(final boolean block);
+        Collection<CharacterStyle> getSpans(final boolean block);
     }
 }

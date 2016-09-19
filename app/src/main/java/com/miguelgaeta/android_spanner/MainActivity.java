@@ -1,28 +1,42 @@
 package com.miguelgaeta.android_spanner;
 
+import android.content.Intent;
 import android.graphics.Color;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.text.Spannable;
+import android.text.method.LinkMovementMethod;
 import android.text.style.CharacterStyle;
 import android.text.style.RelativeSizeSpan;
+import android.util.Log;
+import android.view.View;
 import android.widget.TextView;
 
 import com.miguelgaeta.spanner.Spanner;
 import com.miguelgaeta.spanner.SpannerMarkdown;
 import com.miguelgaeta.spanner.spans.BackgroundColorBlockSpan;
 import com.miguelgaeta.spanner.spans.BackgroundColorSpan;
+import com.miguelgaeta.spanner.spans.BoldSpan;
+import com.miguelgaeta.spanner.spans.ClickableSpan;
 import com.miguelgaeta.spanner.spans.ForegroundColorSpan;
 import com.miguelgaeta.spanner.spans.MonospaceSpan;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class MainActivity extends AppCompatActivity {
 
-    private static final String TEST_STRING_0 = "*zack@discordapp.com* created *[test](/monitors#841376/edit)*.\n\nThe monitor:  \n\n- is named: test.  \n- triggers `a code block` when *apns.pushes* over is *> 200.0* on average during the *last 5m*.  \n- does ```for(int i=0; i < 100; i++) {\n    log.e(\"good stuff\");\n}``` not notify on missing data.  \n- does not automatically resolve.  \n- includes the message: \"test @slack-devops\"  \n- does not renotify.  \n- notifies recipients when @{1121212} definition _is_ modified.  \n- requires a full window of data - includes triggering tags in notification title.  \n; _end_";
+    private static final String TEST_STRING_0 = "~~*zack@discordapp.com*~~ created *[test](/monitors#841376/edit)*.\n\nThe monitor:  \n\n- is named: test.  \n- triggers `a code block` when *apns.pushes* over is *> 200.0* ***on average*** during the *last 5m*.  \n- does ```for(int i=0; i < 100; i++) {\n    log.e(\"good stuff\");\n**test**\n}``` not notify on missing data.  \n- does not automatically resolve.  \n- includes the message: \"test @slack-devops\"  \n- does not renotify.  \n- [notifies recipients](http://www.google.com) when <@1121212> definition _is_ modified.  \n- requires a full window of data - includes triggering tags in notification title.  \n; _end_";
     private static final String TEST_STRING_1 = "Hey this _is_ totally @{1121212} cool *miguel*!";
+    private static final String TEST_STRING_2 = "**one****two**";
+    private static final String TEST_STRING_3 = "**one** ***two***";
+    private static final String TEST_STRING_4 = "~~de~~ dasas```d```asdh this is \\~~hi friend\\~~ for (int i = 0; i < 10; i++) { }``` ~~hi friend~~";
+    private static final String TEST_STRING_5 = "~~de~~ dasasasdh this is \\~~hi friend\\~~ for (int i = 0; i < 10; i++) { } ~~hi friend~~";
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -42,14 +56,16 @@ public class MainActivity extends AppCompatActivity {
                             SpanHelpers.createBoldItalicSpan());
                     }
                 }, "@{", "}")
-                .toSpannableString();
+                .toSpannableString();3
                 */
 
-        final Spannable spanner = new Spanner(TEST_STRING_0)
+        Log.e("Test", "Start");
+
+        final Spannable spanner = new Spanner(TEST_STRING_4)
             .replace(
                 SpannerMarkdown.forCode(new SpannerMarkdown.OnCodeBlockMatchListener() {
                     @Override
-                    public Collection<CharacterStyle> getStyles(final boolean block) {
+                    public Collection<CharacterStyle> getSpans(final boolean block) {
                         final CharacterStyle background;
                         if (block) {
                             background = new BackgroundColorBlockSpan(Color.DKGRAY);
@@ -63,23 +79,40 @@ public class MainActivity extends AppCompatActivity {
                             new ForegroundColorSpan(Color.GRAY), background);
                     }
             }))
+            .replace(new Spanner.MatchStrategy(SpannerMarkdown.PATTERN_LINK, new Spanner.OnMatchListener() {
+                @Override
+                public Spanner.Replacement call(final Matcher matcher) {
+                    final String linkTitle = matcher.group(SpannerMarkdown.LINK_GROUP_TITLE);
+                    final String linkUrl = matcher.group(SpannerMarkdown.LINK_GROUP_URL);
+
+                    return new Spanner.Replacement(linkTitle,
+                        new ForegroundColorSpan(Color.BLUE),
+                        new ClickableSpan(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(linkUrl)));
+                            }
+                        }, true));
+                }
+            }))
             .replace(
                 SpannerMarkdown.forUnderline(),
                 SpannerMarkdown.forBoldItalic(),
                 SpannerMarkdown.forBold(),
                 SpannerMarkdown.forItalic(),
                 SpannerMarkdown.forStrikeThrough())
-            /*
-            .replace(new Spanner.MatchStrategy("triggers|requires", new Spanner.OnMatchListener() {
+            .replace(new Spanner.MatchStrategy("<@([0-9]+?)>", new Spanner.OnMatchListener() {
                 @Override
                 public Spanner.Replacement call(Matcher matcher) {
-                    return new Spanner.Replacement("\n" + "hi" + "\n", new BackgroundColorBlockSpan(Color.RED));
+                    return new Spanner.Replacement("mrkcsc", new BoldSpan(), new ForegroundColorSpan(Color.RED));
                 }
             }))
-            */
             .toSpannable();
 
+        Log.e("Test", "End");
+
         if (holder != null) {
+            holder.setMovementMethod(LinkMovementMethod.getInstance());
             holder.setText(spanner);
         }
 
@@ -93,40 +126,5 @@ public class MainActivity extends AppCompatActivity {
         final String end = "***";
 
         final String regex = "(^|\\s)((" + Pattern.quote(start) + ")([\\s\\S]*?)(" + Pattern.quote(end) + "))($|\\s)";
-
-        /*
-        new Spanner.OnMatchListener() {
-                    @Override
-                    public Spanner.Replacement call(Matcher matcher) {
-                        Log.e("Test", matcher.group());
-
-                        return new Spanner.Replacement(matcher.group(), SpanHelpers.createBoldSpan(),
-                            new LineBackgroundSpan() {
-
-                            private int mBackgroundColor = Color.RED;
-                            private RectF mBgRect = new RectF();
-
-
-                            @Override
-                            public void drawBackground(Canvas c, Paint p, int left, int right, int top, int baseline, int bottom, CharSequence text, int start, int end, int lnum) {
-                                final int paintColor = p.getColor();
-                                // Draw the background
-                                Log.e("Test", "T: " + lnum);
-
-
-                                mBgRect.set(left,
-                                    top,
-                                    right,
-                                    bottom);
-                                p.setColor(mBackgroundColor);
-                                //c.drawRect(mBgRect, p);
-                                c.drawRoundRect(mBgRect, 5, 5, p);
-
-                                p.setColor(paintColor);
-                            }
-                        });
-                    }
-                }
-         */
     }
 }
