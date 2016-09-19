@@ -128,7 +128,7 @@ public class Spanner {
 
         try {
             for (final Replacement replacement : replacements) {
-                for (final Object characterStyle : replacement.replacementSpans) {
+                for (final CharacterStyle characterStyle : replacement.replacementSpans) {
                     spannableString.setSpan(characterStyle, replacement.start, replacement.end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
                 }
             }
@@ -140,7 +140,8 @@ public class Spanner {
     }
 
     /**
-     * TODO
+     * Called when a match is found given the
+     * provided match strategy pattern.
      */
     public interface OnMatchListener {
 
@@ -169,22 +170,27 @@ public class Spanner {
     }
 
     /**
-     * TODO
+     * Represents a replacement for a match on the
+     * input string.  Contains a user provided
+     * replacement string and spans.
+     *
+     * Internally maintains a start and end
+     * index of replaced match.
      */
     public static class Replacement {
 
         final String replacementString;
-        final List<Object> replacementSpans;
+        final Collection<CharacterStyle> replacementSpans;
 
         int start;
         int end;
 
-        public Replacement(final String replacementString, final List<Object> replacementSpans) {
+        public Replacement(final String replacementString, final Collection<CharacterStyle> replacementSpans) {
             this.replacementString = replacementString;
             this.replacementSpans = replacementSpans;
         }
 
-        public Replacement(final String replacementString, Object... spanStyles) {
+        public Replacement(final String replacementString, CharacterStyle... spanStyles) {
             this(replacementString, Arrays.asList(spanStyles));
         }
 
