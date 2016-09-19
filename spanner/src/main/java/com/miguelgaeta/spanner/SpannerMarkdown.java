@@ -18,14 +18,14 @@ import java.util.regex.Pattern;
 @SuppressWarnings({"DefaultFileTemplate", "WeakerAccess"})
 public class SpannerMarkdown {
 
-    private static final String REGEX_CODE_BLOCK = "((```)([\\s\\S]*?)(```))";
-    private static final String REGEX_CODE_INLINE = "((`)([\\s\\S]*?)(`))";
+    private static final String REGEX_CODE_BLOCK = "((```)([\\s\\S]+?)(```))";
+    private static final String REGEX_CODE_INLINE = "((`)([\\s\\S]+?)(`))";
     private static final String REGEX_CODE = REGEX_CODE_BLOCK + "|" + REGEX_CODE_INLINE;
-    private static final String REGEX_UNDERLINE = "(__)([\\s\\S]*?)(__)";
-    private static final String REGEX_BOLD_ITALIC = "(\\*\\*\\*)([\\s\\S]*?)(\\*\\*\\*)";
-    private static final String REGEX_BOLD = "(\\*\\*)([\\s\\S]*?)(\\*\\*)";
-    private static final String REGEX_ITALIC = "((\\*)([\\s\\S]*?)(\\*))|((_)([\\s\\S]*?)(_)($|\\s))";
-    private static final String REGEX_STRIKE_THROUGH = "(~~)([\\s\\S]*?)(~~)";
+    private static final String REGEX_UNDERLINE = "(__)([\\s\\S]+?)(__)";
+    private static final String REGEX_BOLD_ITALIC = "(\\*\\*\\*)([\\s\\S]+?)(\\*\\*\\*)";
+    private static final String REGEX_BOLD = "(\\*\\*)([\\s\\S]+?)(\\*\\*)";
+    private static final String REGEX_ITALIC = "((\\*)([\\s\\S]+?)(\\*))|((_)([\\s\\S]+?)(_)($|\\s))";
+    private static final String REGEX_STRIKE_THROUGH = "(~~)([\\s\\S]+?)(~~)";
 
     // TODO: At least one middle char.
 
