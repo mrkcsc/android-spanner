@@ -83,27 +83,12 @@ public class Spanner {
                 for (final Replacement existingReplacement : replacements) {
 
                     if (existingReplacement.start > endIndex) {
-                        existingReplacement.start -= offset;
-                        existingReplacement.end -= offset;
+                        existingReplacement.start -= matchOffset;
+                        existingReplacement.end -= matchOffset;
+
+                    } else if (existingReplacement.start > startIndex) {
+
                     }
-
-                    /*
-                    if (existingReplacement.start > startIndex) {
-                        existingReplacement.start -= startIndexOffset;
-
-                        if (existingReplacement.start > endIndexUpdated) {
-                            existingReplacement.start -= offset - startIndexOffset;
-                        }
-                    }
-
-                    if (existingReplacement.end > startIndex) {
-                        existingReplacement.end -= startIndexOffset;
-
-                        if (existingReplacement.end > endIndexUpdated) {
-                            existingReplacement.end -= offset - startIndexOffset;
-                        }
-                    }
-                    */
                 }
             }
         }
