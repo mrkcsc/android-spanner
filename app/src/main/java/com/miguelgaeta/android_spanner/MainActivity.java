@@ -6,7 +6,6 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.text.Spannable;
-import android.text.method.LinkMovementMethod;
 import android.text.style.CharacterStyle;
 import android.text.style.RelativeSizeSpan;
 import android.util.Log;
@@ -21,11 +20,22 @@ import com.miguelgaeta.spanner.spans.BoldSpan;
 import com.miguelgaeta.spanner.spans.ClickableSpan;
 import com.miguelgaeta.spanner.spans.ForegroundColorSpan;
 import com.miguelgaeta.spanner.spans.MonospaceSpan;
+import com.yydcdut.rxmarkdown.RxMDConfiguration;
+import com.yydcdut.rxmarkdown.RxMarkdown;
+import com.yydcdut.rxmarkdown.callback.OnLinkClickCallback;
+import com.yydcdut.rxmarkdown.factory.TextFactory;
 
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import rx.Observable;
+import rx.Subscriber;
+import rx.android.schedulers.AndroidSchedulers;
+import rx.functions.Action1;
+import rx.functions.Func1;
+import rx.schedulers.Schedulers;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -35,7 +45,8 @@ public class MainActivity extends AppCompatActivity {
     private static final String TEST_STRING_3 = "**one** ***two***";
     private static final String TEST_STRING_4 = "~~de~~ dasas```d```asdh this is \\~~hi friend\\~~ for (int i = 0; i < 10; i++) { }``` ~~hi friend~~";
     private static final String TEST_STRING_5 = "~~de~~ dasasasdh this is \\~~hi friend\\~~ for (int i = 0; i < 10; i++) { } ~~hi friend~~";
-
+    private static final String TEST_STRING_6 = "this is a code block\n```\nfor(int i=0; i < 100; i++) {\n    log.e(\"good stuff\");\n    \\\\**test**\n}\n```\n isnt it ***great***!";
+    private static final String TEST_STRING_7 = "this is a wumpus ![test](https://cdn.discordapp.com/emojis/233404695966777354.png) so **cool**!";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -58,6 +69,33 @@ public class MainActivity extends AppCompatActivity {
                 }, "@{", "}")
                 .toSpannableString();3
                 */
+
+        RxMDConfiguration rxMDConfiguration = new RxMDConfiguration.Builder(this)
+            .setDefaultImageSize(100, 100)//default image width & height
+            .setBlockQuotesColor(Color.LTGRAY)//default color of block quotes
+            .setHeader1RelativeSize(1.6f)//default relative size of header1
+            .setHeader2RelativeSize(1.5f)//default relative size of header2
+            .setHeader3RelativeSize(1.4f)//default relative size of header3
+            .setHeader4RelativeSize(1.3f)//default relative size of header4
+            .setHeader5RelativeSize(1.2f)//default relative size of header5
+            .setHeader6RelativeSize(1.1f)//default relative size of header6
+            .setHorizontalRulesColor(Color.LTGRAY)//default color of horizontal rules's background
+            .setInlineCodeBgColor(Color.LTGRAY)//default color of inline code's background
+            .setCodeBgColor(Color.LTGRAY)//default color of code's background
+            .setTodoColor(Color.DKGRAY)//default color of todo
+            .setTodoDoneColor(Color.DKGRAY)//default color of done
+            .setUnOrderListColor(Color.BLACK)//default color of unorder list
+            .setLinkColor(Color.RED)//default color of link text
+            .setLinkUnderline(true)//default value of whether displays link underline
+            .setRxMDImageLoader(new OKLoader(this))//default image loader
+            .setDebug(true)//default value of debug
+            .setOnLinkClickCallback(new OnLinkClickCallback() {//link click callback
+                @Override
+                public void onLinkClicked(View view, String link) {
+                    Log.e("Test", link);
+                }
+            })
+            .build();
 
         Log.e("Test", "Start");
 
@@ -109,11 +147,75 @@ public class MainActivity extends AppCompatActivity {
             }))
             .toSpannable();
 
-        Log.e("Test", "End");
 
+
+        /*
         if (holder != null) {
             holder.setMovementMethod(LinkMovementMethod.getInstance());
             holder.setText(spanner);
+        }
+        */
+
+        Observable.just(null).map(new Func1<Object, Object>() {
+            @Override
+            public Object call(Object o) {
+                try {
+                    Thread.sleep(2000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+
+                return null;
+            }
+        })
+        .subscribeOn(Schedulers.computation())
+        .observeOn(AndroidSchedulers.mainThread())
+            .subscribe(new Subscriber<Object>() {
+            @Override
+            public void onCompleted() {
+
+            }
+
+            @Override
+            public void onError(Throwable e) {
+
+            }
+
+            @Override
+            public void onNext(Object o) {
+
+            }
+        });
+
+        RxMarkdown
+            .with(TEST_STRING_7, this)
+            .factory(TextFactory.create())
+            .config(rxMDConfiguration)
+            .intoObservable()
+            .map(new Func1<CharSequence, CharSequence>() {
+                @Override
+                public CharSequence call(CharSequence charSequence) {
+
+                    return charSequence;
+                }
+            })
+            //.subscribeOn(Schedulers.computation())
+            //.observeOn(AndroidSchedulers.mainThread())
+            .subscribe(new Action1<CharSequence>() {
+                @Override
+                public void call(CharSequence charSequence) {
+                    if (holder != null) {
+                        holder.setText(charSequence);
+                    }
+
+                    Log.e("Test", "Finish processing.");
+                }
+            });
+
+        Log.e("Test", "End");
+
+        if (holder != null) {
+            //holder.setText(TextFactory.create().parse(TEST_STRING_7, rxMDConfiguration));
         }
 
         final String baby = "asd *** ddf *** sdfdsf \n" +
